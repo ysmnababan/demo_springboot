@@ -1,0 +1,54 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.flywaydb.flyway' version '9.19.1'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	runtimeOnly 'org.postgresql:postgresql'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// storage
+	implementation 'org.flywaydb:flyway-core'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+
+flyway {
+	var host = System.getenv("DB_HOST") ?: "localhost:5433"
+	var databaseName = System.getenv("DB_NAME") ?: "tester"
+	var sslMode = System.getenv("DB_SSL_MODE") ?: "disable"
+	var sslRootCert = "ca.pem"
+	var sslCert = "client_cert.pem"
+	var sslKey = "client_key.pk8"
+
+	if (System.getenv("DB_SSL_MODE").equals("verify-ca")){
+		url = "jdbc:postgresql://$host/$databaseName?sslmode=$sslMode&sslrootcert=$sslRootCert&sslcert=$sslCert&sslkey=$sslKey"
+	}else{
+		url = "jdbc:postgresql://$host/$databaseName"
+	}
+	user = System.getenv("DB_USERNAME") ?: "root"
+	password = System.getenv("DB_PASSWORD") ?: "password"
+
+	cleanDisabled = false
+}
